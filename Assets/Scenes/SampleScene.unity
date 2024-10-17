@@ -930,7 +930,7 @@ Transform:
   m_GameObject: {fileID: 1317967932}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0.7071068, w: 0.7071068}
-  m_LocalPosition: {x: -0.93, y: 4.19, z: 0}
+  m_LocalPosition: {x: -0.93, y: 4.91, z: 0}
   m_LocalScale: {x: 1, y: 1.8788, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1471,8 +1471,8 @@ Transform:
   m_GameObject: {fileID: 2145930495}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.95689034, y: 0.61352086, z: 0.012901574}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: -0.79819, y: 0.55675, z: 0.012901574}
+  m_LocalScale: {x: 0.83206, y: 0.83206, z: 0.83206}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2108573651}
@@ -1488,6 +1488,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: bar
+      value: 
+      objectReference: {fileID: 428192797}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: jump
       value: 49.3
@@ -1583,7 +1587,7 @@ Animator:
   m_GameObject: {fileID: 2338586285520819449}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 8614a688c273142c78e577821b7bcaf7, type: 2}
+  m_Controller: {fileID: 9100000, guid: b3bd3d32a925e4b75a189e2a9547ca42, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
