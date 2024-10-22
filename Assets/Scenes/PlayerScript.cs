@@ -30,8 +30,19 @@ public class PlayerScript : MonoBehaviour
     public KeyCode moveRightKey;
     public KeyCode jumpKey;
     public KeyCode attackKey;
+    public KeyCode shieldKey; // Key to activate shield
 
     public bool InitialRight;
+
+    // Shield variables
+    public Sprite shieldSprite; // Reference to the shield sprite
+    public Vector3 shieldScale = new Vector3(1f, 1f, 1f); // Scale of the shield
+    public Vector3 shieldPositionOffset = new Vector3(1f, 0, 0); // Position offset of the shield
+    private GameObject activeShield; // Current active shield
+    public float shieldDuration = 2f; // Duration of the shield
+    public float shieldCooldown = 5f; // Cooldown time for shield
+    private bool shieldActive = false; // Track if the shield is active
+    private bool canUseShield = true; // Track if the shield can be used
 
     void Start()
     {
@@ -45,11 +56,17 @@ public class PlayerScript : MonoBehaviour
         }
     }
 
-
     void Update()
     {
+        HandleMovement();
+        HandleJump();
+        HandleAttack();
+        HandleShield(); // Check for shield input
+    }
 
-        // Handle movement
+    private void HandleMovement()
+    {
+        Move = 0; // Default movement to 0
         if (Input.GetKey(moveLeftKey))
         {
             Move = -1;
@@ -58,17 +75,10 @@ public class PlayerScript : MonoBehaviour
         {
             Move = 1;
         }
-        else
-        {
-            Move = 0;
-        }
 
         rb.velocity = new Vector2(Move * speed, rb.velocity.y);
-
-        // Update animator with horizontal velocity
         animator.SetFloat("xVelocity", Math.Abs(rb.velocity.x));
 
-        // Flip player direction based on movement
         if (Move > 0 && !facingRight)
         {
             Flip();
@@ -77,24 +87,63 @@ public class PlayerScript : MonoBehaviour
         {
             Flip();
         }
+    }
 
-        // Handle jump
+    private void HandleJump()
+    {
         if (Input.GetKeyDown(jumpKey) && isGrounded())
         {
-            rb.AddForce(new Vector2(rb.velocity.x, jump * 10));
+            rb.AddForce(new Vector2(0, jump * 10), ForceMode2D.Impulse);
         }
+    }
 
-        // Handle attack with cooldown
+    private void HandleAttack()
+    {
         if (Input.GetKeyDown(attackKey) && canAttack)
         {
             Attack();
         }
-
     }
-    // Continuously update the attackPoint's position based on which direction the player is facing
 
+    private void HandleShield()
+    {
+        if (Input.GetKeyDown(shieldKey) && canUseShield)
+        {
+            ActivateShield();
+        }
+    }
 
+    private void ActivateShield()
+    {
+        shieldActive = true;
+        canUseShield = false;
 
+        // Create the shield sprite
+        activeShield = new GameObject("Shield");
+        SpriteRenderer spriteRenderer = activeShield.AddComponent<SpriteRenderer>();
+        spriteRenderer.sprite = shieldSprite;
+        spriteRenderer.sortingOrder = 1; // Adjust sorting order if needed
+
+        // Position the shield in front of the player using the offset
+        Vector3 shieldPosition = transform.position + (facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z));
+        activeShield.transform.position = shieldPosition;
+
+        // Set the scale of the shield
+        activeShield.transform.localScale = shieldScale;
+
+        // Start coroutine to manage shield duration and cooldown
+        StartCoroutine(ShieldCoroutine());
+    }
+
+    private IEnumerator ShieldCoroutine()
+    {
+        yield return new WaitForSeconds(shieldDuration); // Wait for shield duration
+        Destroy(activeShield); // Destroy the shield
+        shieldActive = false;
+
+        yield return new WaitForSeconds(shieldCooldown); // Wait for cooldown
+        canUseShield = true; // Allow shield usage again
+    }
 
     public bool isGrounded()
     {
@@ -110,37 +159,55 @@ public class PlayerScript : MonoBehaviour
         // Draw the attack range at the attackPoint
         if (attackPoint != null)
         {
-
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(attackPoint.transform.position, radius);
         }
+
+        // Draw the shield position offset
+        Gizmos.color = Color.blue; // Color for shield position offset
+        Vector3 shieldPosition = transform.position + (facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z));
+        Gizmos.DrawLine(transform.position, shieldPosition); // Draw line to shield position
+        Gizmos.DrawSphere(shieldPosition, 0.1f); // Draw a small sphere at the shield position
     }
 
     public void TakeDamage()
     {
-        currHealth -= 20;
-        bar.SetHealth(currHealth);
+        if (!shieldActive) // Only take damage if shield is not active
+        {
+            currHealth -= 20;
+            currHealth = Mathf.Max(currHealth, 0); // Prevent negative health
+            bar.SetHealth(currHealth);
+
+            if (currHealth <= 0)
+            {
+                // Trigger death logic here (e.g., disable the player)
+            }
+        }
     }
 
     // Flip the player by rotating on the Y-axis
     private void Flip()
     {
-        Debug.Log(attackPoint.transform.position);
         facingRight = !facingRight;
-
         transform.Rotate(0f, 180f, 0f);  // Rotate the player by 180 degrees around the Y-axis
     }
 
     // Trigger the attack animation
     private void Attack()
     {
-        Collider2D enemy = Physics2D.OverlapCircle(attackPoint.transform.position, radius, Player);
-        if (enemy)
-        {
+        // Get all enemies in the attack radius
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(attackPoint.transform.position, radius, Player);
 
-            Debug.Log("Enemy Hit");
-            enemy.GetComponent<PlayerScript>().TakeDamage();
+        // Loop through each enemy collider detected
+        foreach (Collider2D enemy in enemies)
+        {
+            // Ensure the enemy is not the player itself
+            if (enemy.gameObject != this.gameObject)
+            {
+                enemy.GetComponent<PlayerScript>().TakeDamage();  // Deal damage to the enemy
+            }
         }
+
         canAttack = false;  // Disable further attacks during cooldown
         animator.SetBool("isAttacking", true);  // Start the attack animation
         Invoke("StopAttack", 0.2f);  // Stop the attack animation after 0.2 seconds

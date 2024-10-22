@@ -565,7 +565,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: -10}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.059888486, y: 0.04491636, z: 0.059888486}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -1672,11 +1672,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.27
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.02
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1723,6 +1723,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldKey
+      value: 274
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: moveLeftKey
       value: 276
       objectReference: {fileID: 0}
@@ -1739,12 +1743,36 @@ PrefabInstance:
       value: 275
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldPrefab
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: bdcfb21181ef34d4c88243dde49af920, type: 3}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: Player.m_Bits
       value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldScale.x
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldScale.y
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldScale.z
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: BGLayer.m_Bits
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldPositionOffset.x
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6890592765684720836, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalScale.x
@@ -2026,11 +2054,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.27
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.02
+      value: -0.04
       objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.z
@@ -2077,6 +2105,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldKey
+      value: 115
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: moveLeftKey
       value: 97
       objectReference: {fileID: 0}
@@ -2097,12 +2129,40 @@ PrefabInstance:
       value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldPrefab
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldSprite
+      value: 
+      objectReference: {fileID: 21300000, guid: bdcfb21181ef34d4c88243dde49af920, type: 3}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: Player.m_Bits
       value: 128
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldScale.x
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldScale.y
+      value: 0.82
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldScale.z
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: BGLayer.m_Bits
       value: 64
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldController
+      value: 
+      objectReference: {fileID: 0}
+    - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: shieldPositionOffset.x
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6890592765684720836, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalScale.x
