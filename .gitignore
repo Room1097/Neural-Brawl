@@ -15,6 +15,7 @@
 /[Mm]emoryCaptures/
 /mlvenv
 /venv
+/results
 # Recordings can get excessive in size
 /[Rr]ecordings/
 
