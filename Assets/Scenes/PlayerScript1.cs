@@ -4,6 +4,7 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
+using Unity.MLAgents.Policies;  // Import this to use BehaviorParameters
 
 public class PlayerAgent : Agent
 {
@@ -32,12 +33,17 @@ public class PlayerAgent : Agent
 
     public PlayerAgent enemyAgent;  // Reference to the other player (enemy agent)
 
+    private BehaviorParameters behaviorParameters;  // Reference to BehaviorParameters component
+
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
         currHealth = maxHealth;
         bar.SetMaxHealth(maxHealth);
+
+        behaviorParameters = GetComponent<BehaviorParameters>();
+
         if (!InitialRight)
         {
             Flip();
@@ -54,13 +60,10 @@ public class PlayerAgent : Agent
         {
             enemyAgent.ResetEnemy();  // Optionally reset the enemy's health as well
         }
-
-        // Let Unity handle the starting positions
     }
 
     public void ResetEnemy()
     {
-        // Reset only the enemy's health
         currHealth = maxHealth;
         bar.SetHealth(currHealth);
         rb.velocity = Vector2.zero;
@@ -68,7 +71,6 @@ public class PlayerAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        // Collect information about this player's state
         sensor.AddObservation(rb.velocity);
         sensor.AddObservation(currHealth);
         sensor.AddObservation(transform.position.x);
@@ -76,30 +78,47 @@ public class PlayerAgent : Agent
         sensor.AddObservation(isGrounded() ? 1f : 0f);
         sensor.AddObservation(facingRight ? 1f : 0f);
 
-        // Collect information about the enemy's state
         if (enemyAgent != null)
         {
-            sensor.AddObservation(enemyAgent.transform.position.x);  // Enemy position (x)
-            sensor.AddObservation(enemyAgent.transform.position.y);  // Enemy position (y)
-            sensor.AddObservation(enemyAgent.currHealth);            // Enemy health
+            sensor.AddObservation(enemyAgent.transform.position.x);
+            sensor.AddObservation(enemyAgent.transform.position.y);
+            sensor.AddObservation(enemyAgent.currHealth);
         }
     }
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        // Get movement and attack actions from the neural network
-        float moveInput = actions.ContinuousActions[0];  // First action (continuous action) for moving left/right
-        float jumpInput = actions.ContinuousActions[1];  // Second action (continuous action) for jumping
-        int attackInput = actions.DiscreteActions[0];    // Discrete action for attacking
+        int moveAction = actions.DiscreteActions[0];
+        int jumpAction = actions.DiscreteActions[1];
+        int attackAction = actions.DiscreteActions[2];
 
-        // Apply movement based on network's actions
-        Move = Mathf.Clamp(moveInput, -1f, 1f);
+        // Print the actions received for debugging
+        Debug.Log($"Decisions: Move = {moveAction}, Jump = {jumpAction}, Attack = {attackAction}");
+
+        if (enemyAgent != null)
+        {
+            float distanceToEnemy = enemyAgent.transform.position.x - transform.position.x;
+            Move = (moveAction == 1) ? -1f : (moveAction == 2) ? 1f : 0f;
+
+            float previousDistance = Mathf.Abs(distanceToEnemy);
+            float newDistance = Mathf.Abs(enemyAgent.transform.position.x - transform.position.x);
+            if (newDistance < previousDistance)
+            {
+                CustomAddReward(0.1f); // Reward for getting closer
+            }
+            else if (newDistance == previousDistance)
+            {
+                CustomAddReward(-0.2f);
+            }
+            else
+            {
+                CustomAddReward(-0.1f); // Penalty for moving away
+            }
+        }
+
         rb.velocity = new Vector2(Move * speed, rb.velocity.y);
-
-        // Update animator with horizontal velocity
         animator.SetFloat("xVelocity", Mathf.Abs(rb.velocity.x));
 
-        // Flip player direction based on movement
         if (Move > 0 && !facingRight)
         {
             Flip();
@@ -109,14 +128,12 @@ public class PlayerAgent : Agent
             Flip();
         }
 
-        // Handle jump if the network signals a jump and the agent is grounded
-        if (jumpInput > 0 && isGrounded())
+        if (jumpAction == 1 && isGrounded())
         {
             rb.AddForce(new Vector2(rb.velocity.x, jump * 10));
         }
 
-        // Handle attack if the network signals an attack and cooldown allows it
-        if (attackInput > 0 && canAttack)
+        if (attackAction == 1 && canAttack)
         {
             Attack();
         }
@@ -124,12 +141,11 @@ public class PlayerAgent : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        var continuousActions = actionsOut.ContinuousActions;
-        continuousActions[0] = Input.GetKey(KeyCode.A) ? -1f : (Input.GetKey(KeyCode.D) ? 1f : 0f);
-        continuousActions[1] = Input.GetKey(KeyCode.Space) ? 1f : 0f;
-
         var discreteActions = actionsOut.DiscreteActions;
-        discreteActions[0] = Input.GetKey(KeyCode.Mouse0) ? 1 : 0;  // Left-click for attack
+        discreteActions[0] = Input.GetKey(KeyCode.A) ? 1 : (Input.GetKey(KeyCode.D) ? 2 : 0);
+        discreteActions[1] = Input.GetKey(KeyCode.Space) ? 1 : 0;
+        discreteActions[2] = Input.GetKey(KeyCode.W) ? 1 : 0;
+        Debug.Log($"Heuristic Decisions: Move = {discreteActions[0]}, Jump = {discreteActions[1]}, Attack = {discreteActions[2]}");
     }
 
     public bool isGrounded()
@@ -169,13 +185,11 @@ public class PlayerAgent : Agent
     private void Attack()
     {
         Collider2D enemy = Physics2D.OverlapCircle(attackPoint.transform.position, radius, Player);
-        if (enemy && enemy.GetComponent<PlayerAgent>() == enemyAgent)  // Ensure the hit is on the enemy agent
+        if (enemy)
         {
             Debug.Log("Enemy Hit");
-            enemyAgent.TakeDamage();
-
-            // Add reward for successful hit
-            AddReward(1.0f);
+            enemy.GetComponent<PlayerAgent>().TakeDamage();
+            CustomAddReward(1.0f); // Reward for hitting the enemy
         }
         canAttack = false;
         animator.SetBool("isAttacking", true);
@@ -191,5 +205,11 @@ public class PlayerAgent : Agent
     private void ResetAttack()
     {
         canAttack = true;
+    }
+
+    private void CustomAddReward(float reward)
+    {
+        AddReward(reward);
+        Debug.Log($"Reward Added: {reward}");
     }
 }

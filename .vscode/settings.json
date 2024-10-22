@@ -56,6 +56,6 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "Neural-Brawl.sln",
+    "dotnet.defaultSolution": "Neural Brawl.sln",
     "git.ignoreLimitWarning": true
 }
