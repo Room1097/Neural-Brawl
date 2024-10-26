@@ -188,7 +188,7 @@ public class PlayerAgent : Agent
         }
         else
         {
-            CustomAddReward(-0.1f); // Small penalty for moving away
+            CustomAddReward(0.0f); // no penalty for moving away
         }
 
         // Additional penalty if the agent is too far from the enemy
@@ -218,6 +218,12 @@ public class PlayerAgent : Agent
 
     private void ActivateShield()
     {
+        if (activeShield != null)
+        {
+            Debug.Log("Shield already active.");
+            return; // Exit if the shield is already active
+        }
+
         shieldActive = true;
         canUseShield = false;
 
@@ -231,13 +237,14 @@ public class PlayerAgent : Agent
         activeShield.transform.SetParent(transform);
 
         // Position and scale the shield relative to the player
-        activeShield.transform.localPosition = shieldPositionOffset; // Set as local position offset
+        activeShield.transform.localPosition = shieldPositionOffset;
         activeShield.transform.localScale = shieldScale;
 
         Debug.Log("Shield activated.");
 
         StartCoroutine(ShieldCoroutine());
     }
+
 
     private IEnumerator ShieldCoroutine()
     {
@@ -253,55 +260,55 @@ public class PlayerAgent : Agent
     }
 
     private void Attack()
-{
-    // Get all enemies in the attack radius
-    Collider2D[] enemies = Physics2D.OverlapCircleAll(attackPoint.transform.position, radius, Player);
-
-    // Loop through each enemy collider detected
-    foreach (Collider2D enemy in enemies)
     {
-        // Ensure the enemy is not the player itself
-        if (enemy.gameObject != this.gameObject)
-        {
-            PlayerAgent enemyAgent = enemy.GetComponent<PlayerAgent>();
+        // Get all enemies in the attack radius
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(attackPoint.transform.position, radius, Player);
 
-            if (enemyAgent.shieldActive)
+        // Loop through each enemy collider detected
+        foreach (Collider2D enemy in enemies)
+        {
+            // Ensure the enemy is not the player itself
+            if (enemy.gameObject != this.gameObject)
             {
-                Debug.Log("Enemy's shield absorbed the attack");
-                CustomAddReward(-0.5f); // Penalty for hitting an active shield
-            }
-            else
-            {
-                Debug.Log("Enemy Hit");
-                enemyAgent.TakeDamage(); // Deal damage to the enemy
-                CustomAddReward(1.5f); // Increased reward for hitting the enemy
+                PlayerAgent enemyAgent = enemy.GetComponent<PlayerAgent>();
+
+                if (enemyAgent.shieldActive)
+                {
+                    Debug.Log("Enemy's shield absorbed the attack");
+                    CustomAddReward(-0.5f); // Penalty for hitting an active shield
+                }
+                else
+                {
+                    Debug.Log("Enemy Hit");
+                    enemyAgent.TakeDamage(); // Deal damage to the enemy
+                    CustomAddReward(1.5f); // Increased reward for hitting the enemy
+                }
             }
         }
+
+        if (enemies.Length == 0)
+        {
+            Debug.Log("Attack missed.");
+            CustomAddReward(-0.2f); // Penalty for missing the attack
+        }
+
+        canAttack = false;
+        animator.SetBool("isAttacking", true);
+        Invoke("StopAttack", 0.2f);
+        Invoke("ResetAttack", attackCooldown);
     }
 
-    if (enemies.Length == 0)
+    private void StopAttack()
     {
-        Debug.Log("Attack missed.");
-        CustomAddReward(-0.2f); // Penalty for missing the attack
+        animator.SetBool("isAttacking", false);
+        Debug.Log("Attack animation stopped.");
     }
 
-    canAttack = false;
-    animator.SetBool("isAttacking", true);
-    Invoke("StopAttack", 0.2f);
-    Invoke("ResetAttack", attackCooldown);
-}
-
-private void StopAttack()
-{
-    animator.SetBool("isAttacking", false);
-    Debug.Log("Attack animation stopped.");
-}
-
-private void ResetAttack()
-{
-    canAttack = true;
-    Debug.Log("Attack cooldown ended. Ready to attack again.");
-}
+    private void ResetAttack()
+    {
+        canAttack = true;
+        Debug.Log("Attack cooldown ended. Ready to attack again.");
+    }
     public void TakeDamage()
     {
         if (!shieldActive && !isEpisodeEnding) // Check if the episode is ending to prevent multiple calls
@@ -314,8 +321,9 @@ private void ResetAttack()
             if (currHealth <= 0)
             {
                 Debug.Log("Player defeated.");
+                CustomAddReward(-1.0f);
                 isEpisodeEnding = true; // Set flag to prevent looping
-                // EndEpisode();
+                EndEpisode();
             }
         }
         else if (shieldActive)
