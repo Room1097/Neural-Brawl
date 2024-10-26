@@ -114,26 +114,27 @@ public class PlayerScript : MonoBehaviour
     }
 
     private void ActivateShield()
-    {
-        shieldActive = true;
-        canUseShield = false;
+{
+    shieldActive = true;
+    canUseShield = false;
 
-        // Create the shield sprite
-        activeShield = new GameObject("Shield");
-        SpriteRenderer spriteRenderer = activeShield.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = shieldSprite;
-        spriteRenderer.sortingOrder = 1; // Adjust sorting order if needed
+    // Create the shield GameObject and set its properties
+    activeShield = new GameObject("Shield");
+    SpriteRenderer spriteRenderer = activeShield.AddComponent<SpriteRenderer>();
+    spriteRenderer.sprite = shieldSprite;
+    spriteRenderer.sortingOrder = 1;
 
-        // Position the shield in front of the player using the offset
-        Vector3 shieldPosition = transform.position + (facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z));
-        activeShield.transform.position = shieldPosition;
+    // Set the shield's parent to the current player object
+    activeShield.transform.SetParent(transform);
 
-        // Set the scale of the shield
-        activeShield.transform.localScale = shieldScale;
+    // Position and scale the shield relative to the player
+    Vector3 shieldPosition = transform.position + (facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z));
+    activeShield.transform.localPosition = shieldPositionOffset; // Set as local position offset
+    activeShield.transform.localScale = shieldScale;
 
-        // Start coroutine to manage shield duration and cooldown
-        StartCoroutine(ShieldCoroutine());
-    }
+    StartCoroutine(ShieldCoroutine());
+}
+
 
     private IEnumerator ShieldCoroutine()
     {

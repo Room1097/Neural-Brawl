@@ -1756,15 +1756,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: shieldScale.x
-      value: 0.82
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: shieldScale.y
-      value: 0.82
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: shieldScale.z
-      value: 0.82
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: BGLayer.m_Bits
@@ -2142,11 +2142,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: shieldScale.x
-      value: 0.82
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: shieldScale.y
-      value: 0.82
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: shieldScale.z

@@ -23,9 +23,3 @@ behaviors:
     max_steps: 80000000
     time_horizon: 1000
     summary_freq: 20000
-    self_play:
-      window: 10
-      play_against_latest_model_ratio: 0.5
-      save_steps: 500            
-      team_change: 200            
-      swap_steps: 100
