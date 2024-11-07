@@ -1,10 +1,10 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
+using TMPro;
 
 public class PlayerAgent : Agent
 {
@@ -51,6 +51,14 @@ public class PlayerAgent : Agent
     private bool shieldActive = false;
     private bool canUseShield = true;
 
+    // Counters for episodes and deaths
+    private int totalEpisodes = 0;
+    private int totalDeaths = 0;
+
+    // UI text elements for displaying counters
+    public TextMeshProUGUI episodeCounterText;
+    public TextMeshProUGUI deathCounterText;
+
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -75,17 +83,17 @@ public class PlayerAgent : Agent
         canUseShield = true;
         shieldActive = false;
         isEpisodeEnding = false; // Reset the episode ending flag
+
         if (activeShield != null)
         {
             Destroy(activeShield);
         }
 
-        // if (enemyAgent != null)
-        // {
-        //     enemyAgent.ResetEnemy();
-        // }
+        totalEpisodes++; // Increment the total episodes counter
+        UpdateUI();
 
         Debug.Log("Episode started. Health reset to " + currHealth);
+        Debug.Log("Total Episodes: " + totalEpisodes);
     }
 
     private void OnDrawGizmos()
@@ -102,17 +110,16 @@ public class PlayerAgent : Agent
         }
 
         // Draw the shield position offset
-        Gizmos.color = Color.blue; // Color for shield position offset
+        Gizmos.color = Color.blue;
         Vector3 shieldPosition = transform.position + (facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z));
-        Gizmos.DrawLine(transform.position, shieldPosition); // Draw line to shield position
-        Gizmos.DrawSphere(shieldPosition, 0.1f); // Draw a small sphere at the shield position
+        Gizmos.DrawLine(transform.position, shieldPosition);
+        Gizmos.DrawSphere(shieldPosition, 0.1f);
     }
 
     public void ResetEnemy()
     {
         currHealth = maxHealth;
         bar.SetHealth(currHealth);
-        // rb.velocity = Vector2.zero;
         Debug.Log("Enemy reset. Health set to " + currHealth);
     }
 
@@ -144,7 +151,6 @@ public class PlayerAgent : Agent
         int attackAction = actions.DiscreteActions[2];
         int shieldAction = actions.DiscreteActions[3]; // New action for shield
 
-        // Track the agent's position before movement
         float previousDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
 
         Move = (moveAction == 1) ? -1f : (moveAction == 2) ? 1f : 0f;
@@ -178,20 +184,17 @@ public class PlayerAgent : Agent
             Debug.Log("Shield action performed.");
         }
 
-        // Calculate the new distance to the enemy after movement
         float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
 
-        // Reward for moving closer to the enemy
         if (currentDistanceToEnemy < previousDistanceToEnemy)
         {
-            CustomAddReward(0.1f); // Small reward for getting closer
+            CustomAddReward(0.1f);
         }
         else
         {
-            CustomAddReward(0.0f); // no penalty for moving away
+            CustomAddReward(0.0f);
         }
 
-        // Additional penalty if the agent is too far from the enemy
         if (currentDistanceToEnemy > 5.0f)
         {
             CustomAddReward(-0.2f);
@@ -204,7 +207,7 @@ public class PlayerAgent : Agent
         discreteActions[0] = Input.GetKey(moveLeftKey) ? 1 : (Input.GetKey(moveRightKey) ? 2 : 0);
         discreteActions[1] = Input.GetKey(jumpKey) ? 1 : 0;
         discreteActions[2] = Input.GetKey(attackKey) ? 1 : 0;
-        discreteActions[3] = Input.GetKey(shieldKey) ? 1 : 0; // Shield action
+        discreteActions[3] = Input.GetKey(shieldKey) ? 1 : 0;
 
         Debug.Log("Heuristic input: Move: " + discreteActions[0] + ", Jump: " + discreteActions[1] + ", Attack: " + discreteActions[2] + ", Shield: " + discreteActions[3]);
     }
@@ -221,22 +224,18 @@ public class PlayerAgent : Agent
         if (activeShield != null)
         {
             Debug.Log("Shield already active.");
-            return; // Exit if the shield is already active
+            return;
         }
 
         shieldActive = true;
         canUseShield = false;
 
-        // Create the shield GameObject and set its properties
         activeShield = new GameObject("Shield");
         SpriteRenderer spriteRenderer = activeShield.AddComponent<SpriteRenderer>();
         spriteRenderer.sprite = shieldSprite;
         spriteRenderer.sortingOrder = 1;
 
-        // Set the shield's parent to the current player object
         activeShield.transform.SetParent(transform);
-
-        // Position and scale the shield relative to the player
         activeShield.transform.localPosition = shieldPositionOffset;
         activeShield.transform.localScale = shieldScale;
 
@@ -244,7 +243,6 @@ public class PlayerAgent : Agent
 
         StartCoroutine(ShieldCoroutine());
     }
-
 
     private IEnumerator ShieldCoroutine()
     {
@@ -261,13 +259,10 @@ public class PlayerAgent : Agent
 
     private void Attack()
     {
-        // Get all enemies in the attack radius
         Collider2D[] enemies = Physics2D.OverlapCircleAll(attackPoint.transform.position, radius, Player);
 
-        // Loop through each enemy collider detected
         foreach (Collider2D enemy in enemies)
         {
-            // Ensure the enemy is not the player itself
             if (enemy.gameObject != this.gameObject)
             {
                 PlayerAgent enemyAgent = enemy.GetComponent<PlayerAgent>();
@@ -275,13 +270,13 @@ public class PlayerAgent : Agent
                 if (enemyAgent.shieldActive)
                 {
                     Debug.Log("Enemy's shield absorbed the attack");
-                    CustomAddReward(-0.5f); // Penalty for hitting an active shield
+                    CustomAddReward(-0.5f);
                 }
                 else
                 {
                     Debug.Log("Enemy Hit");
-                    enemyAgent.TakeDamage(); // Deal damage to the enemy
-                    CustomAddReward(1.5f); // Increased reward for hitting the enemy
+                    enemyAgent.TakeDamage();
+                    CustomAddReward(1.5f);
                 }
             }
         }
@@ -289,7 +284,7 @@ public class PlayerAgent : Agent
         if (enemies.Length == 0)
         {
             Debug.Log("Attack missed.");
-            CustomAddReward(-0.2f); // Penalty for missing the attack
+            CustomAddReward(-0.2f);
         }
 
         canAttack = false;
@@ -307,11 +302,12 @@ public class PlayerAgent : Agent
     private void ResetAttack()
     {
         canAttack = true;
-        Debug.Log("Attack cooldown ended. Ready to attack again.");
+        Debug.Log("Attack reset.");
     }
+
     public void TakeDamage()
     {
-        if (!shieldActive && !isEpisodeEnding) // Check if the episode is ending to prevent multiple calls
+        if (!shieldActive && !isEpisodeEnding)
         {
             currHealth -= 20;
             bar.SetHealth(currHealth);
@@ -320,9 +316,12 @@ public class PlayerAgent : Agent
 
             if (currHealth <= 0)
             {
-                Debug.Log("Player defeated.");
+                totalDeaths++; // Increment the death counter
+                UpdateUI();
+
+                Debug.Log("Player defeated. Total Deaths: " + totalDeaths);
                 CustomAddReward(-1.0f);
-                isEpisodeEnding = true; // Set flag to prevent looping
+                isEpisodeEnding = true;
                 EndEpisode();
             }
         }
@@ -332,16 +331,32 @@ public class PlayerAgent : Agent
         }
     }
 
+    private void UpdateUI()
+    {
+        if (episodeCounterText != null)
+        {
+            episodeCounterText.text = "Episodes: " + totalEpisodes;
+        }
+
+        if (deathCounterText != null)
+        {
+            deathCounterText.text = "Deaths: " + totalDeaths;
+        }
+    }
+
     private void Flip()
     {
         facingRight = !facingRight;
-        transform.Rotate(0f, 180f, 0f);
+        Vector3 scaler = transform.localScale;
+        scaler.x *= -1;
+        transform.localScale = scaler;
+
         Debug.Log("Player flipped. Facing right: " + facingRight);
     }
 
     private void CustomAddReward(float reward)
     {
         AddReward(reward);
-        Debug.Log("Added reward: " + reward);
+        Debug.Log("Reward added: " + reward);
     }
 }
