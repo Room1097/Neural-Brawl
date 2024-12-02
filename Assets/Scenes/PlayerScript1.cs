@@ -285,6 +285,10 @@ public class PlayerAgent : Agent
                     Debug.Log("Enemy Hit");
                     enemyAgent.TakeDamage();
                     CustomAddReward(1.5f);
+                    if (enemyAgent.currHealth == 0)
+                    {
+                        CustomAddReward(2.0f);
+                    }
                 }
             }
         }
@@ -338,6 +342,7 @@ public class PlayerAgent : Agent
         else
         {
             Debug.Log("Shield blocked the damage.");
+            CustomAddReward(1.0f);
         }
     }
 
