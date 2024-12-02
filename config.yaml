@@ -19,16 +19,13 @@ behaviors:
       extrinsic:
         gamma: 0.96
         strength: 1.0
-      curiosity:                     # Adding curiosity for exploration insights
-        strength: 0.01
-        gamma: 0.96
     keep_checkpoints: 5
     max_steps: 80000000
     time_horizon: 1000
-    summary_freq: 1000               # Increased logging frequency for more TensorBoard data points
+    summary_freq: 1000
     self_play:
       window: 10
       play_against_latest_model_ratio: 0.5
-      save_steps: 500
-      team_change: 200
-      swap_steps: 100
+      save_steps: 5000
+      team_change: 2000
+      swap_steps: 1000

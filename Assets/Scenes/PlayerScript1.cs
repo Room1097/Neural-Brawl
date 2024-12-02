@@ -5,6 +5,7 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 using TMPro;
+using UnityEditor.ProjectWindowCallback;
 
 public class PlayerAgent : Agent
 {
@@ -13,11 +14,12 @@ public class PlayerAgent : Agent
     public int maxHealth = 100;
     public int currHealth;
     private float Move;
+    // private bool isEnded = false;
     public float speed;
     public float jump;
     private bool facingRight = true;
     private bool canAttack = true;
-    private bool isEpisodeEnding = false; // Flag to prevent looping
+    // private bool isEpisodeEnding = false; // Flag to prevent looping
 
     public KeyCode moveLeftKey;
     public KeyCode moveRightKey;
@@ -52,7 +54,7 @@ public class PlayerAgent : Agent
     private bool canUseShield = true;
 
     // Counters for episodes and deaths
-    private int totalEpisodes = 0;
+    private int totalEpisodes = 1;
     private int totalDeaths = 0;
 
     // UI text elements for displaying counters
@@ -82,14 +84,15 @@ public class PlayerAgent : Agent
         bar.SetHealth(currHealth);
         canUseShield = true;
         shieldActive = false;
-        isEpisodeEnding = false; // Reset the episode ending flag
+        // isEpisodeEnding = false; // Reset the episode ending flag
+        // isEnded = false;
 
         if (activeShield != null)
         {
             Destroy(activeShield);
         }
 
-        totalEpisodes++; // Increment the total episodes counter
+
         UpdateUI();
 
         Debug.Log("Episode started. Health reset to " + currHealth);
@@ -141,7 +144,7 @@ public class PlayerAgent : Agent
             sensor.AddObservation(enemyAgent.shieldActive ? 1f : 0f); // Observation for enemy shield status
         }
 
-        Debug.Log("Observations collected.");
+        // Debug.Log("Observations collected.");
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -169,19 +172,19 @@ public class PlayerAgent : Agent
         if (jumpAction == 1 && isGrounded())
         {
             rb.AddForce(new Vector2(rb.velocity.x, jump * 10));
-            Debug.Log("Jump action performed.");
+            // Debug.Log("Jump action performed.");
         }
 
         if (attackAction == 1 && canAttack)
         {
             Attack();
-            Debug.Log("Attack action performed.");
+            // Debug.Log("Attack action performed.");
         }
 
         if (shieldAction == 1 && canUseShield)
         {
             ActivateShield();
-            Debug.Log("Shield action performed.");
+            // Debug.Log("Shield action performed.");
         }
 
         float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
@@ -192,12 +195,12 @@ public class PlayerAgent : Agent
         }
         else
         {
-            CustomAddReward(0.0f);
+            // CustomAddReward(0.0f);
         }
 
         if (currentDistanceToEnemy > 5.0f)
         {
-            CustomAddReward(-0.2f);
+            //CustomAddReward(-0.2f);
         }
     }
 
@@ -215,7 +218,7 @@ public class PlayerAgent : Agent
     public bool isGrounded()
     {
         bool grounded = Physics2D.BoxCast(transform.position, Boxsize, 0, -transform.up, castDistance, BGLayer);
-        Debug.Log("Is grounded: " + grounded);
+        // Debug.Log("Is grounded: " + grounded);
         return grounded;
     }
 
@@ -296,36 +299,38 @@ public class PlayerAgent : Agent
     private void StopAttack()
     {
         animator.SetBool("isAttacking", false);
-        Debug.Log("Attack animation stopped.");
+        // Debug.Log("Attack animation stopped.");
     }
 
     private void ResetAttack()
     {
         canAttack = true;
-        Debug.Log("Attack reset.");
+        // Debug.Log("Attack reset.");
     }
 
     public void TakeDamage()
     {
-        if (!shieldActive && !isEpisodeEnding)
+        Debug.Log("TakeDamage called. Current health before damage: " + currHealth);
+        if (!shieldActive)
         {
             currHealth -= 20;
             bar.SetHealth(currHealth);
-
-            Debug.Log("Took damage. Current health: " + currHealth);
+            Debug.Log("Took damage. Current health after damage: " + currHealth);
 
             if (currHealth <= 0)
             {
-                totalDeaths++; // Increment the death counter
+                totalEpisodes++;
+                enemyAgent.totalEpisodes++;
+                totalDeaths++;
                 UpdateUI();
 
                 Debug.Log("Player defeated. Total Deaths: " + totalDeaths);
                 CustomAddReward(-1.0f);
-                isEpisodeEnding = true;
+                enemyAgent.EndEpisode();
                 EndEpisode();
             }
         }
-        else if (shieldActive)
+        else
         {
             Debug.Log("Shield blocked the damage.");
         }
@@ -351,7 +356,7 @@ public class PlayerAgent : Agent
         scaler.x *= -1;
         transform.localScale = scaler;
 
-        Debug.Log("Player flipped. Facing right: " + facingRight);
+        // Debug.Log("Player flipped. Facing right: " + facingRight);
     }
 
     private void CustomAddReward(float reward)

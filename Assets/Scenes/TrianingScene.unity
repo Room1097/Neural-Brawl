@@ -458,7 +458,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 1000
+  MaxStep: 0
   animator: {fileID: 368322782}
   maxHealth: 100
   currHealth: 0
@@ -512,7 +512,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: ddd9d24f2975fa343880365e536483cc, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 89ddd0101401d3e4ebb8507b4f35c16b, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 2
   m_BehaviorName: My Behavior
@@ -1695,7 +1695,7 @@ MonoBehaviour:
   agentParameters:
     maxStep: 0
   hasUpgradedFromAgentParameters: 1
-  MaxStep: 1000
+  MaxStep: 0
   animator: {fileID: 1316461358}
   maxHealth: 100
   currHealth: 0
@@ -1749,7 +1749,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: ddd9d24f2975fa343880365e536483cc, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: 0b23f9b4ccbd94944934f608430a37b8, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 2
   m_BehaviorName: My Behavior
