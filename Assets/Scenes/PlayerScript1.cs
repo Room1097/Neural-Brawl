@@ -200,12 +200,7 @@ public class PlayerAgent : Agent
 
         if (currentDistanceToEnemy > 5.0f)
         {
-            CustomAddReward(-0.2f);
-        }
-
-        if (health < 30 && currentDistanceToEnemy > 5.0f)
-        {
-            CustomAddReward(0.2f);
+            //CustomAddReward(-0.2f);
         }
     }
 
