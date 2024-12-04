@@ -76,8 +76,8 @@ public class PlayerScript : MonoBehaviour
             Move = 1;
         }
 
-        rb.velocity = new Vector2(Move * speed, rb.velocity.y);
-        animator.SetFloat("xVelocity", Math.Abs(rb.velocity.x));
+        rb.linearVelocity = new Vector2(Move * speed, rb.linearVelocity.y);
+        animator.SetFloat("xVelocity", Math.Abs(rb.linearVelocity.x));
 
         if (Move > 0 && !facingRight)
         {

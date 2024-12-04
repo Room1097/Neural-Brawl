@@ -51,9 +51,9 @@ public class Demo : MonoBehaviour {
 		float horizontal = Input.GetAxis("Horizontal");
 		if (!dead && !attack)
 		{
-			anim.SetFloat ("vSpeed", rb.velocity.y);
+			anim.SetFloat ("vSpeed", rb.linearVelocity.y);
 			anim.SetFloat ("Speed", Mathf.Abs (horizontal));
-			rb.velocity = new Vector2 (horizontal * speed, rb.velocity.y);
+			rb.linearVelocity = new Vector2 (horizontal * speed, rb.linearVelocity.y);
 		}
 		if (horizontal > 0 && !facingRight && !dead && !attack) {
 			Flip (horizontal);

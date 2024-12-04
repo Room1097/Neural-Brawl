@@ -54,7 +54,7 @@ public class PlayerAgent : Agent
     private bool canUseShield = true;
 
     // Counters for episodes and deaths
-    private int totalEpisodes = 1;
+    private int totalEpisodes = 0;
     private int totalDeaths = 0;
 
     // UI text elements for displaying counters
@@ -65,38 +65,98 @@ public class PlayerAgent : Agent
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
-        currHealth = maxHealth;
-        bar.SetMaxHealth(maxHealth);
+
+        if (bar != null)
+        {
+            bar.SetMaxHealth(maxHealth);
+        }
+        else
+        {
+            Debug.LogError("HealthBar reference not assigned.");
+        }
 
         behaviorParameters = GetComponent<BehaviorParameters>();
+        currHealth = maxHealth;
 
         if (!InitialRight)
         {
             Flip();
         }
 
-        Debug.Log("PlayerAgent initialized with max health: " + maxHealth);
+        Debug.Log("PlayerAgent initialized.");
     }
 
     public override void OnEpisodeBegin()
     {
         currHealth = maxHealth;
-        bar.SetHealth(currHealth);
+
+        if (bar != null)
+        {
+            bar.SetHealth(currHealth);
+        }
+
         canUseShield = true;
         shieldActive = false;
-        // isEpisodeEnding = false; // Reset the episode ending flag
-        // isEnded = false;
 
         if (activeShield != null)
         {
             Destroy(activeShield);
         }
 
+        StopAllCoroutines();
+        StartCoroutine(EpisodeTimerCoroutine(60));
+
+        totalEpisodes++;
+        // if (enemyAgent != null)
+        // {
+        //     enemyAgent.totalEpisodes++;
+        // }
 
         UpdateUI();
+        Debug.Log("Episode started.");
+    }
 
-        Debug.Log("Episode started. Health reset to " + currHealth);
-        Debug.Log("Total Episodes: " + totalEpisodes);
+    private IEnumerator EpisodeTimerCoroutine(float duration)
+    {
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            yield return null; // Wait for the next frame
+            timer += Time.deltaTime;
+        }
+
+        // Timer has elapsed; end the episode
+        Debug.Log("30-second timer elapsed. Ending episode.");
+        EndEpisodeAfterTimeout();
+    }
+
+    private void EndEpisodeAfterTimeout()
+    {
+        // Compare health of both agents
+        if (enemyAgent != null)
+        {
+            if (currHealth < enemyAgent.currHealth)
+            {
+                totalDeaths++;
+                CustomAddReward(-1.0f);
+            }
+            else if (currHealth > enemyAgent.currHealth)
+            {
+                enemyAgent.totalDeaths++;
+                CustomAddReward(1.0f);
+            }
+            else
+            {
+                // In case of a tie, no death increment
+                Debug.Log("Timeout with tied health.");
+                CustomAddReward(0.5f);
+            }
+        }
+
+        UpdateUI();
+        enemyAgent.EndEpisode();
+        EndEpisode();
     }
 
     private void OnDrawGizmos()
@@ -128,7 +188,7 @@ public class PlayerAgent : Agent
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(rb.velocity);
+        sensor.AddObservation(rb.linearVelocity);
         sensor.AddObservation(currHealth);
         sensor.AddObservation(transform.position.x);
         sensor.AddObservation(transform.position.y);
@@ -157,8 +217,8 @@ public class PlayerAgent : Agent
         float previousDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
 
         Move = (moveAction == 1) ? -1f : (moveAction == 2) ? 1f : 0f;
-        rb.velocity = new Vector2(Move * speed, rb.velocity.y);
-        animator.SetFloat("xVelocity", Mathf.Abs(rb.velocity.x));
+        rb.linearVelocity = new Vector2(Move * speed, rb.linearVelocity.y);
+        animator.SetFloat("xVelocity", Mathf.Abs(rb.linearVelocity.x));
 
         if (Move > 0 && !facingRight)
         {
@@ -171,7 +231,7 @@ public class PlayerAgent : Agent
 
         if (jumpAction == 1 && isGrounded())
         {
-            rb.AddForce(new Vector2(rb.velocity.x, jump * 10));
+            rb.AddForce(new Vector2(rb.linearVelocity.x, jump * 10));
             // Debug.Log("Jump action performed.");
         }
 
@@ -189,9 +249,9 @@ public class PlayerAgent : Agent
 
         float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
 
-        if (currentDistanceToEnemy < previousDistanceToEnemy)
+        if (enemyAgent.currHealth <= 40 && currentDistanceToEnemy < previousDistanceToEnemy)
         {
-            CustomAddReward(0.1f);
+            //CustomAddReward(0.1f);
         }
         else
         {
@@ -199,6 +259,16 @@ public class PlayerAgent : Agent
         }
 
         if (currentDistanceToEnemy > 5.0f)
+        {
+            //CustomAddReward(-0.2f);
+        }
+
+        if (currHealth <= 40 && currentDistanceToEnemy > 5.0f)
+        {
+            //CustomAddReward(-0.2f);
+        }
+
+        if (enemyAgent.currHealth <= 40 && currentDistanceToEnemy > 5.0f)
         {
             //CustomAddReward(-0.2f);
         }
@@ -224,9 +294,9 @@ public class PlayerAgent : Agent
 
     private void ActivateShield()
     {
-        if (activeShield != null)
+        if (activeShield != null || !canUseShield)
         {
-            Debug.Log("Shield already active.");
+            Debug.LogWarning("Cannot activate shield.");
             return;
         }
 
@@ -238,11 +308,10 @@ public class PlayerAgent : Agent
         spriteRenderer.sprite = shieldSprite;
         spriteRenderer.sortingOrder = 1;
 
+        Vector3 offset = facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z);
         activeShield.transform.SetParent(transform);
-        activeShield.transform.localPosition = shieldPositionOffset;
+        activeShield.transform.localPosition = offset;
         activeShield.transform.localScale = shieldScale;
-
-        Debug.Log("Shield activated.");
 
         StartCoroutine(ShieldCoroutine());
     }
@@ -323,8 +392,7 @@ public class PlayerAgent : Agent
 
             if (currHealth <= 0)
             {
-                totalEpisodes++;
-                enemyAgent.totalEpisodes++;
+
                 totalDeaths++;
                 UpdateUI();
 
