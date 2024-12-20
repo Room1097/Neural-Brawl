@@ -388,6 +388,7 @@ public class PlayerAgent : Agent
         {
             currHealth -= 20;
             bar.SetHealth(currHealth);
+            CustomAddReward(-1.0f);
             Debug.Log("Took damage. Current health after damage: " + currHealth);
 
             if (currHealth <= 0)
