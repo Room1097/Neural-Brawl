@@ -398,7 +398,7 @@ public class PlayerAgent : Agent
                 UpdateUI();
 
                 Debug.Log("Player defeated. Total Deaths: " + totalDeaths);
-                CustomAddReward(-1.0f);
+                CustomAddReward(-2.0f);
                 enemyAgent.EndEpisode();
                 EndEpisode();
             }
