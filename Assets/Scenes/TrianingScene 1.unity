@@ -446,7 +446,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3a5c9d521e5ef4759a8246a07d52221e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  DecisionPeriod: 2
+  DecisionPeriod: 3
   DecisionStep: 0
   TakeActionsBetweenDecisions: 1
 --- !u!114 &368322780
@@ -494,6 +494,7 @@ MonoBehaviour:
   shieldPositionOffset: {x: 0, y: 0, z: 0}
   shieldDuration: 1
   shieldCooldown: 10
+  shieldActive: 0
   episodeCounterText: {fileID: 1667325554}
   deathCounterText: {fileID: 1191125824}
 --- !u!114 &368322781
@@ -518,7 +519,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 89ddd0101401d3e4ebb8507b4f35c16b, type: 3}
+  m_Model: {fileID: 0}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: My Behavior
@@ -1038,6 +1039,18 @@ PrefabInstance:
       propertyPath: m_FlipX
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4234364380376728559, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4234364380376728559, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_Color.g
+      value: 0.73281765
+      objectReference: {fileID: 0}
+    - target: {fileID: 4234364380376728559, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_Color.r
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.27
@@ -1181,6 +1194,10 @@ PrefabInstance:
     - target: {fileID: 8682208234964994092, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_Constraints
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8682208234964994092, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_GravityScale
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
@@ -1739,6 +1756,7 @@ MonoBehaviour:
   shieldPositionOffset: {x: 0, y: 0, z: 0}
   shieldDuration: 1
   shieldCooldown: 10
+  shieldActive: 0
   episodeCounterText: {fileID: 0}
   deathCounterText: {fileID: 126213236}
 --- !u!114 &1316461360
@@ -1763,7 +1781,7 @@ MonoBehaviour:
     VectorActionDescriptions: []
     VectorActionSpaceType: 0
     hasUpgradedBrainParametersWithActionSpec: 1
-  m_Model: {fileID: 5022602860645237092, guid: 0b23f9b4ccbd94944934f608430a37b8, type: 3}
+  m_Model: {fileID: 5022602860645237092, guid: ddd9d24f2975fa343880365e536483cc, type: 3}
   m_InferenceDevice: 0
   m_BehaviorType: 0
   m_BehaviorName: My Behavior
@@ -2605,6 +2623,18 @@ PrefabInstance:
       propertyPath: m_FlipX
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4234364380376728559, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_Color.b
+      value: 0.07596293
+      objectReference: {fileID: 0}
+    - target: {fileID: 4234364380376728559, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_Color.g
+      value: 0.07596293
+      objectReference: {fileID: 0}
+    - target: {fileID: 4234364380376728559, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_Color.r
+      value: 0.85660374
+      objectReference: {fileID: 0}
     - target: {fileID: 5117388597400917642, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0.27
@@ -2748,6 +2778,10 @@ PrefabInstance:
     - target: {fileID: 8682208234964994092, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
       propertyPath: m_Constraints
       value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 8682208234964994092, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
+      propertyPath: m_GravityScale
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 6366201674712885182, guid: 3595b3e2a50cf374fbea87411d182d1e, type: 3}
@@ -3219,6 +3253,7 @@ MonoBehaviour:
   shieldPositionOffset: {x: 0, y: 0, z: 0}
   shieldDuration: 1
   shieldCooldown: 10
+  shieldActive: 0
   episodeCounterText: {fileID: 0}
   deathCounterText: {fileID: 0}
 --- !u!114 &2338586285520819452
