@@ -50,7 +50,8 @@ public class PlayerAgent : Agent
     private GameObject activeShield;
     public float shieldDuration = 2f;
     public float shieldCooldown = 5f;
-    private bool shieldActive = false;
+    public 
+    bool shieldActive = false;
     private bool canUseShield = true;
 
     // Counters for episodes and deaths
@@ -368,7 +369,9 @@ public class PlayerAgent : Agent
         Invoke("StopAttack", 0.2f);
         Invoke("ResetAttack", attackCooldown);
     }
-
+    public bool isShieldActive(){
+        return shieldActive;
+    }
     private void StopAttack()
     {
         animator.SetBool("isAttacking", false);
