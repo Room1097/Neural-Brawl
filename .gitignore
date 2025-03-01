@@ -14,6 +14,7 @@
 # They also could contain extremely sensitive data
 /[Mm]emoryCaptures/
 /mlvenv
+/mlagents
 /venv
 /results
 # Recordings can get excessive in size
