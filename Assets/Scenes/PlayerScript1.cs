@@ -250,29 +250,11 @@ public class PlayerAgent : Agent
 
         float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
 
-        if (enemyAgent.currHealth <= 40 && currentDistanceToEnemy < previousDistanceToEnemy)
+        if (currentDistanceToEnemy < previousDistanceToEnemy)
         {
-            //CustomAddReward(0.1f);
+            CustomAddReward(0.1f);
         }
-        else
-        {
-            // CustomAddReward(0.0f);
-        }
-
-        if (currentDistanceToEnemy > 5.0f)
-        {
-            //CustomAddReward(-0.2f);
-        }
-
-        if (currHealth <= 40 && currentDistanceToEnemy > 5.0f)
-        {
-            //CustomAddReward(-0.2f);
-        }
-
-        if (enemyAgent.currHealth <= 40 && currentDistanceToEnemy > 5.0f)
-        {
-            //CustomAddReward(-0.2f);
-        }
+        
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -343,16 +325,16 @@ public class PlayerAgent : Agent
                 if (enemyAgent.shieldActive)
                 {
                     Debug.Log("Enemy's shield absorbed the attack");
-                    CustomAddReward(-0.5f);
+                    CustomAddReward(0.0f);
                 }
                 else
                 {
                     Debug.Log("Enemy Hit");
                     enemyAgent.TakeDamage();
-                    CustomAddReward(1.5f);
+                    CustomAddReward(0.2f);
                     if (enemyAgent.currHealth == 0)
                     {
-                        CustomAddReward(2.0f);
+                        CustomAddReward(1.0f);
                     }
                 }
             }
@@ -391,7 +373,7 @@ public class PlayerAgent : Agent
         {
             currHealth -= 20;
             bar.SetHealth(currHealth);
-            CustomAddReward(-1.0f);
+            CustomAddReward(-0.2f);
             Debug.Log("Took damage. Current health after damage: " + currHealth);
 
             if (currHealth <= 0)
@@ -401,7 +383,7 @@ public class PlayerAgent : Agent
                 UpdateUI();
 
                 Debug.Log("Player defeated. Total Deaths: " + totalDeaths);
-                CustomAddReward(-2.0f);
+                CustomAddReward(-1.0f);
                 enemyAgent.EndEpisode();
                 EndEpisode();
             }
@@ -409,7 +391,7 @@ public class PlayerAgent : Agent
         else
         {
             Debug.Log("Shield blocked the damage.");
-            CustomAddReward(1.0f);
+            CustomAddReward(0.2f);
         }
     }
 
