@@ -50,7 +50,7 @@ public class PlayerAgent : Agent
     private GameObject activeShield;
     public float shieldDuration = 2f;
     public float shieldCooldown = 5f;
-    public 
+    public
     bool shieldActive = false;
     private bool canUseShield = true;
 
@@ -140,19 +140,19 @@ public class PlayerAgent : Agent
             if (currHealth < enemyAgent.currHealth)
             {
                 totalDeaths++;
-                CustomAddReward(-1.0f);
+                CustomAddReward(-0.5f);
             }
             else if (currHealth > enemyAgent.currHealth)
             {
                 enemyAgent.totalDeaths++;
-                CustomAddReward(1.0f);
+                CustomAddReward(0.5f);
             }
-            else
-            {
-                // In case of a tie, no death increment
-                Debug.Log("Timeout with tied health.");
-                CustomAddReward(-1f);
-            }
+            // else
+            // {
+            //     // In case of a tie, no death increment
+            //     Debug.Log("Timeout with tied health.");
+            //     CustomAddReward(0.5f);
+            // }
         }
 
         UpdateUI();
@@ -249,12 +249,14 @@ public class PlayerAgent : Agent
         }
 
         float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
-
-        // if (currentDistanceToEnemy < previousDistanceToEnemy)
-        // {
-        //     CustomAddReward(0.1f);
-        // }
-        
+        if (currentDistanceToEnemy < previousDistanceToEnemy && enemyAgent.currHealth <= 40)
+        {
+            CustomAddReward(0.01f); // Reward for getting closer to the enemy
+        }
+        else
+        {
+            CustomAddReward(-0.005f); // Slight penalty for moving away
+        }
     }
 
     public override void Heuristic(in ActionBuffers actionsOut)
@@ -331,7 +333,7 @@ public class PlayerAgent : Agent
                 {
                     Debug.Log("Enemy Hit");
                     enemyAgent.TakeDamage();
-                    CustomAddReward(0.2f);
+                    CustomAddReward(0.75f);
                     if (enemyAgent.currHealth == 0)
                     {
                         CustomAddReward(1.0f);
@@ -343,7 +345,7 @@ public class PlayerAgent : Agent
         if (enemies.Length == 0)
         {
             Debug.Log("Attack missed.");
-            CustomAddReward(-0.2f);
+            CustomAddReward(-0.1f);
         }
 
         canAttack = false;
@@ -351,7 +353,8 @@ public class PlayerAgent : Agent
         Invoke("StopAttack", 0.2f);
         Invoke("ResetAttack", attackCooldown);
     }
-    public bool isShieldActive(){
+    public bool isShieldActive()
+    {
         return shieldActive;
     }
     private void StopAttack()
@@ -373,7 +376,7 @@ public class PlayerAgent : Agent
         {
             currHealth -= 20;
             bar.SetHealth(currHealth);
-            CustomAddReward(-0.2f);
+            CustomAddReward(-0.5f);
             Debug.Log("Took damage. Current health after damage: " + currHealth);
 
             if (currHealth <= 0)
@@ -391,7 +394,7 @@ public class PlayerAgent : Agent
         else
         {
             Debug.Log("Shield blocked the damage.");
-            CustomAddReward(0.2f);
+            CustomAddReward(0.5f);
         }
     }
 
