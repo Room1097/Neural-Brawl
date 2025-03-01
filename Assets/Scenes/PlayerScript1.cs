@@ -151,7 +151,7 @@ public class PlayerAgent : Agent
             {
                 // In case of a tie, no death increment
                 Debug.Log("Timeout with tied health.");
-                CustomAddReward(0.5f);
+                CustomAddReward(-1f);
             }
         }
 
@@ -250,10 +250,10 @@ public class PlayerAgent : Agent
 
         float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
 
-        if (currentDistanceToEnemy < previousDistanceToEnemy)
-        {
-            CustomAddReward(0.1f);
-        }
+        // if (currentDistanceToEnemy < previousDistanceToEnemy)
+        // {
+        //     CustomAddReward(0.1f);
+        // }
         
     }
 
