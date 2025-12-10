@@ -5,154 +5,151 @@ using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using Unity.MLAgents.Policies;
 using TMPro;
-using UnityEditor.ProjectWindowCallback;
 
 public class PlayerAgent : Agent
 {
+    // --- RESEARCH / ABLATION SETTINGS ---
+    [Header("Ablation Studies")]
+    public bool useDistanceReward = true; 
+    public bool useShieldReward = true;    
+    public bool useCombatReward = true;    
+    // ------------------------------------
+
+    [Header("References")]
     private Rigidbody2D rb;
     public Animator animator;
+    public HealthBar bar;
+    
+    // --- FIX: Replaced 'activeShield' with a permanent reference to improve performance
+    [Tooltip("Drag the child GameObject containing the Shield Sprite here.")]
+    public GameObject shieldVisuals; 
+
+    [Header("Stats")]
     public int maxHealth = 100;
     public int currHealth;
-    private float Move;
-    // private bool isEnded = false;
-    public float speed;
-    public float jump;
-    private bool facingRight = true;
-    private bool canAttack = true;
-    // private bool isEpisodeEnding = false; // Flag to prevent looping
-
-    public KeyCode moveLeftKey;
-    public KeyCode moveRightKey;
-    public KeyCode jumpKey;
-    public KeyCode attackKey;
-    public KeyCode shieldKey; // Key to activate shield
-
+    public float speed = 5f;
+    public float jump = 5f;
     public float attackCooldown = 0.5f;
-    public HealthBar bar;
+    public float shieldDuration = 2f;
+    public float shieldCooldown = 5f;
 
+    [Header("Combat Setup")]
     public Vector2 Boxsize;
     public GameObject attackPoint;
     public float castDistance;
     public float radius;
-
     public LayerMask BGLayer;
     public LayerMask Player;
-
     public bool InitialRight;
     public PlayerAgent enemyAgent;
 
-    private BehaviorParameters behaviorParameters;
+    [Header("Inputs (Heuristic)")]
+    public KeyCode moveLeftKey;
+    public KeyCode moveRightKey;
+    public KeyCode jumpKey;
+    public KeyCode attackKey;
+    public KeyCode shieldKey; 
 
-    // Shield variables
-    public Sprite shieldSprite;
-    public Vector3 shieldScale = new Vector3(1f, 1f, 1f);
-    public Vector3 shieldPositionOffset = new Vector3(1f, 0, 0);
-    private GameObject activeShield;
-    public float shieldDuration = 2f;
-    public float shieldCooldown = 5f;
-    public
-    bool shieldActive = false;
+    // Internal State
+    private float Move;
+    private bool facingRight = true;
+    private bool canAttack = true;
+    private bool shieldActive = false;
     private bool canUseShield = true;
+    
+    // --- FIX: Variable to store previous distance for correct reward calculation
+    private float lastDistanceToEnemy;
 
-    // Counters for episodes and deaths
+    // UI Counters
     private int totalEpisodes = 0;
     private int totalDeaths = 0;
-
-    // UI text elements for displaying counters
     public TextMeshProUGUI episodeCounterText;
     public TextMeshProUGUI deathCounterText;
+
+    //logger
+    public StatsLogger statsLogger;
 
     public override void Initialize()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
 
-        if (bar != null)
-        {
-            bar.SetMaxHealth(maxHealth);
-        }
-        else
-        {
-            Debug.LogError("HealthBar reference not assigned.");
-        }
+        if (bar != null) bar.SetMaxHealth(maxHealth);
+        else Debug.LogError("HealthBar reference not assigned.");
 
-        behaviorParameters = GetComponent<BehaviorParameters>();
         currHealth = maxHealth;
 
-        if (!InitialRight)
-        {
-            Flip();
-        }
+        if (!InitialRight) Flip();
 
-        Debug.Log("PlayerAgent initialized.");
+        // Ensure shield is off at start
+        if (shieldVisuals != null) shieldVisuals.SetActive(false);
     }
 
     public override void OnEpisodeBegin()
     {
         currHealth = maxHealth;
+        if (bar != null) bar.SetHealth(currHealth);
 
-        if (bar != null)
-        {
-            bar.SetHealth(currHealth);
-        }
-
+        // Reset States
         canUseShield = true;
         shieldActive = false;
+        canAttack = true;
+        
+        // --- FIX: Use SetActive instead of Destroy() to stop lag spikes
+        if (shieldVisuals != null) shieldVisuals.SetActive(false);
 
-        if (activeShield != null)
+        // --- FIX: Reset physics velocity so agent doesn't "slide" into new episode
+        rb.linearVelocity = Vector2.zero;
+
+        // --- FIX: Initialize distance variable to prevent weird rewards on frame 1
+        if (enemyAgent != null)
         {
-            Destroy(activeShield);
+            lastDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
         }
 
-        StopAllCoroutines();
+        StopAllCoroutines(); 
         StartCoroutine(EpisodeTimerCoroutine(60));
 
         totalEpisodes++;
-        // if (enemyAgent != null)
-        // {
-        //     enemyAgent.totalEpisodes++;
-        // }
-
         UpdateUI();
-        Debug.Log("Episode started.");
     }
 
     private IEnumerator EpisodeTimerCoroutine(float duration)
     {
-        float timer = 0f;
-
-        while (timer < duration)
-        {
-            yield return null; // Wait for the next frame
-            timer += Time.deltaTime;
-        }
-
-        // Timer has elapsed; end the episode
-        Debug.Log("30-second timer elapsed. Ending episode.");
+        yield return new WaitForSeconds(duration);
         EndEpisodeAfterTimeout();
     }
 
+    
+
     private void EndEpisodeAfterTimeout()
     {
-        // Compare health of both agents
         if (enemyAgent != null)
         {
             if (currHealth < enemyAgent.currHealth)
             {
+                // Enemy Wins
+                if(statsLogger != null) 
+                    statsLogger.LogMatch(totalEpisodes, enemyAgent.name, 60f, enemyAgent.currHealth);
+                
                 totalDeaths++;
                 CustomAddReward(-0.5f);
             }
             else if (currHealth > enemyAgent.currHealth)
             {
+                // We Win
+                if(statsLogger != null) 
+                    statsLogger.LogMatch(totalEpisodes, this.name, 60f, currHealth);
+                    
                 enemyAgent.totalDeaths++;
                 CustomAddReward(0.5f);
             }
-            // else
-            // {
-            //     // In case of a tie, no death increment
-            //     Debug.Log("Timeout with tied health.");
-            //     CustomAddReward(0.5f);
-            // }
+            else 
+            {
+                // Draw
+                if(statsLogger != null) 
+                    statsLogger.LogMatch(totalEpisodes, "Draw", 60f, currHealth);
+            }
         }
 
         UpdateUI();
@@ -160,52 +157,36 @@ public class PlayerAgent : Agent
         EndEpisode();
     }
 
-    private void OnDrawGizmos()
-    {
-        // Draw the box that checks for ground (isGrounded)
-        Gizmos.color = Color.green;
-        Gizmos.DrawWireCube(transform.position - transform.up * castDistance, Boxsize);
-
-        // Draw the attack range at the attackPoint
-        if (attackPoint != null)
-        {
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(attackPoint.transform.position, radius);
-        }
-
-        // Draw the shield position offset
-        Gizmos.color = Color.blue;
-        Vector3 shieldPosition = transform.position + (facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z));
-        Gizmos.DrawLine(transform.position, shieldPosition);
-        Gizmos.DrawSphere(shieldPosition, 0.1f);
-    }
-
     public void ResetEnemy()
     {
         currHealth = maxHealth;
         bar.SetHealth(currHealth);
-        Debug.Log("Enemy reset. Health set to " + currHealth);
     }
 
     public override void CollectObservations(VectorSensor sensor)
     {
-        sensor.AddObservation(rb.linearVelocity);
-        sensor.AddObservation(currHealth);
-        sensor.AddObservation(transform.position.x);
-        sensor.AddObservation(transform.position.y);
+        // --- FIX: Normalization! Neural networks hate large numbers like "100".
+        // Divide by max values to keep inputs between 0 and 1.
+        
+        sensor.AddObservation(rb.linearVelocity.x / 10f); // Assuming max speed is around 10
+        sensor.AddObservation(rb.linearVelocity.y / 50f);
+        
+        sensor.AddObservation(currHealth / (float)maxHealth); // Normalized Health
+        
+        // Relative position is better than absolute position
+        Vector2 relativePos = (enemyAgent.transform.position - transform.position);
+        sensor.AddObservation(relativePos.x / 20f); // Divide by approx arena width
+        sensor.AddObservation(relativePos.y / 10f); 
+
         sensor.AddObservation(isGrounded() ? 1f : 0f);
         sensor.AddObservation(facingRight ? 1f : 0f);
         sensor.AddObservation(shieldActive ? 1f : 0f);
 
         if (enemyAgent != null)
         {
-            sensor.AddObservation(enemyAgent.transform.position.x);
-            sensor.AddObservation(enemyAgent.transform.position.y);
-            sensor.AddObservation(enemyAgent.currHealth);
-            sensor.AddObservation(enemyAgent.shieldActive ? 1f : 0f); // Observation for enemy shield status
+            sensor.AddObservation(enemyAgent.currHealth / (float)maxHealth); // Normalized Enemy Health
+            sensor.AddObservation(enemyAgent.isShieldActive() ? 1f : 0f);
         }
-
-        // Debug.Log("Observations collected.");
     }
 
     public override void OnActionReceived(ActionBuffers actions)
@@ -213,52 +194,159 @@ public class PlayerAgent : Agent
         int moveAction = actions.DiscreteActions[0];
         int jumpAction = actions.DiscreteActions[1];
         int attackAction = actions.DiscreteActions[2];
-        int shieldAction = actions.DiscreteActions[3]; // New action for shield
+        int shieldAction = actions.DiscreteActions[3];
 
-        float previousDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
-
+        // 1. Movement Logic
         Move = (moveAction == 1) ? -1f : (moveAction == 2) ? 1f : 0f;
         rb.linearVelocity = new Vector2(Move * speed, rb.linearVelocity.y);
         animator.SetFloat("xVelocity", Mathf.Abs(rb.linearVelocity.x));
 
-        if (Move > 0 && !facingRight)
-        {
-            Flip();
-        }
-        else if (Move < 0 && facingRight)
-        {
-            Flip();
-        }
+        // Orientation
+        if (Move > 0 && !facingRight) Flip();
+        else if (Move < 0 && facingRight) Flip();
 
+        // 2. Jump Logic
         if (jumpAction == 1 && isGrounded())
         {
-            rb.AddForce(new Vector2(rb.linearVelocity.x, jump * 10));
-            // Debug.Log("Jump action performed.");
+            rb.AddForce(new Vector2(rb.linearVelocity.x, jump * 10)); // Be careful with force accumulation
         }
 
+        // 3. Attack Logic
         if (attackAction == 1 && canAttack)
         {
-            Attack();
-            // Debug.Log("Attack action performed.");
+            StartCoroutine(AttackCoroutine());
         }
 
+        // 4. Shield Logic
         if (shieldAction == 1 && canUseShield)
         {
-            ActivateShield();
-            // Debug.Log("Shield action performed.");
+            StartCoroutine(ShieldCoroutine());
         }
 
-        float currentDistanceToEnemy = Vector2.Distance(transform.position, enemyAgent.transform.position);
-        if (currentDistanceToEnemy < previousDistanceToEnemy && enemyAgent.currHealth <= 40)
+        // --- FIX: Distance Reward Logic ---
+        // We calculate reward based on the change in distance compared to LAST frame.
+        if (useDistanceReward && enemyAgent != null)
         {
-            CustomAddReward(0.01f); // Reward for getting closer to the enemy
-        }
-        else
-        {
-            CustomAddReward(-0.005f); // Slight penalty for moving away
+            float currentDistance = Vector2.Distance(transform.position, enemyAgent.transform.position);
+            float distanceChange = lastDistanceToEnemy - currentDistance; // Positive if got closer
+
+            // Only reward approach if enemy is weak (Hunting behavior)
+            if (distanceChange > 0 && enemyAgent.currHealth <= 40)
+            {
+                CustomAddReward(0.001f); // Small persistent reward
+            }
+            else if (distanceChange < 0)
+            {
+                CustomAddReward(-0.001f); 
+            }
+
+            lastDistanceToEnemy = currentDistance;
         }
     }
 
+    private IEnumerator AttackCoroutine()
+    {
+        canAttack = false;
+        animator.SetBool("isAttacking", true);
+        
+        PerformAttackHitCheck(); 
+
+        yield return new WaitForSeconds(0.2f); 
+        animator.SetBool("isAttacking", false);
+
+        yield return new WaitForSeconds(attackCooldown); 
+        canAttack = true;
+    }
+
+    private void PerformAttackHitCheck()
+    {
+        Collider2D[] enemies = Physics2D.OverlapCircleAll(attackPoint.transform.position, radius, Player);
+        bool hitSomething = false;
+
+        foreach (Collider2D enemy in enemies)
+        {
+            if (enemy.gameObject != this.gameObject)
+            {
+                PlayerAgent target = enemy.GetComponent<PlayerAgent>();
+                hitSomething = true;
+
+                if (target.isShieldActive())
+                {
+                    Debug.Log("Attack Blocked!");
+                    CustomAddReward(-0.05f); // Slight penalty for hitting a shield
+                }
+                else
+                {
+                    Debug.Log("Enemy Hit");
+                    target.TakeDamage();
+
+                    if (useCombatReward)
+                    {
+                        CustomAddReward(0.5f);
+                        if (target.currHealth <= 0) CustomAddReward(1.0f);
+                    }
+                }
+            }
+        }
+
+        if (!hitSomething)
+        {
+             // Penalty for swinging at air (encourages precision)
+             CustomAddReward(-0.02f);
+        }
+    }
+
+    // --- FIX: Converted Shield logic to simple SetActive toggle
+    private IEnumerator ShieldCoroutine()
+    {
+        if (shieldActive || !canUseShield) yield break;
+
+        shieldActive = true;
+        canUseShield = false;
+
+        if (shieldVisuals != null) shieldVisuals.SetActive(true);
+
+        yield return new WaitForSeconds(shieldDuration);
+
+        if (shieldVisuals != null) shieldVisuals.SetActive(false);
+        shieldActive = false;
+
+        Debug.Log("Shield Deactivated");
+
+        yield return new WaitForSeconds(shieldCooldown);
+        canUseShield = true;
+        Debug.Log("Shield Ready");
+    }
+
+    public void TakeDamage()
+    {
+        if (!shieldActive)
+        {
+            currHealth -= 20;
+            if (bar != null) bar.SetHealth(currHealth);
+            
+            CustomAddReward(-0.2f); 
+
+            if (currHealth <= 0)
+            {
+                if(statsLogger != null) 
+                {
+                    statsLogger.LogMatch(totalEpisodes, enemyAgent.name, Time.timeSinceLevelLoad, enemyAgent.currHealth);
+                }
+                totalDeaths++;
+                UpdateUI();
+                CustomAddReward(-1.0f); 
+                enemyAgent.EndEpisode();
+                EndEpisode();
+            }
+        }
+        else
+        {
+            if (useShieldReward) CustomAddReward(0.2f); 
+        }
+    }
+
+    
     public override void Heuristic(in ActionBuffers actionsOut)
     {
         var discreteActions = actionsOut.DiscreteActions;
@@ -266,150 +354,14 @@ public class PlayerAgent : Agent
         discreteActions[1] = Input.GetKey(jumpKey) ? 1 : 0;
         discreteActions[2] = Input.GetKey(attackKey) ? 1 : 0;
         discreteActions[3] = Input.GetKey(shieldKey) ? 1 : 0;
-
-        Debug.Log("Heuristic input: Move: " + discreteActions[0] + ", Jump: " + discreteActions[1] + ", Attack: " + discreteActions[2] + ", Shield: " + discreteActions[3]);
     }
 
     public bool isGrounded()
     {
-        bool grounded = Physics2D.BoxCast(transform.position, Boxsize, 0, -transform.up, castDistance, BGLayer);
-        // Debug.Log("Is grounded: " + grounded);
-        return grounded;
+        return Physics2D.BoxCast(transform.position, Boxsize, 0, -transform.up, castDistance, BGLayer);
     }
-
-    private void ActivateShield()
-    {
-        if (activeShield != null || !canUseShield)
-        {
-            Debug.LogWarning("Cannot activate shield.");
-            return;
-        }
-
-        shieldActive = true;
-        canUseShield = false;
-
-        activeShield = new GameObject("Shield");
-        SpriteRenderer spriteRenderer = activeShield.AddComponent<SpriteRenderer>();
-        spriteRenderer.sprite = shieldSprite;
-        spriteRenderer.sortingOrder = 1;
-
-        Vector3 offset = facingRight ? shieldPositionOffset : new Vector3(-shieldPositionOffset.x, shieldPositionOffset.y, shieldPositionOffset.z);
-        activeShield.transform.SetParent(transform);
-        activeShield.transform.localPosition = offset;
-        activeShield.transform.localScale = shieldScale;
-
-        StartCoroutine(ShieldCoroutine());
-    }
-
-    private IEnumerator ShieldCoroutine()
-    {
-        yield return new WaitForSeconds(shieldDuration);
-        Destroy(activeShield);
-        shieldActive = false;
-
-        Debug.Log("Shield deactivated.");
-
-        yield return new WaitForSeconds(shieldCooldown);
-        canUseShield = true;
-        Debug.Log("Shield ready again.");
-    }
-
-    private void Attack()
-    {
-        Collider2D[] enemies = Physics2D.OverlapCircleAll(attackPoint.transform.position, radius, Player);
-
-        foreach (Collider2D enemy in enemies)
-        {
-            if (enemy.gameObject != this.gameObject)
-            {
-                PlayerAgent enemyAgent = enemy.GetComponent<PlayerAgent>();
-
-                if (enemyAgent.shieldActive)
-                {
-                    Debug.Log("Enemy's shield absorbed the attack");
-                    CustomAddReward(0.0f);
-                }
-                else
-                {
-                    Debug.Log("Enemy Hit");
-                    enemyAgent.TakeDamage();
-                    CustomAddReward(0.75f);
-                    if (enemyAgent.currHealth == 0)
-                    {
-                        CustomAddReward(1.0f);
-                    }
-                }
-            }
-        }
-
-        if (enemies.Length == 0)
-        {
-            Debug.Log("Attack missed.");
-            CustomAddReward(-0.1f);
-        }
-
-        canAttack = false;
-        animator.SetBool("isAttacking", true);
-        Invoke("StopAttack", 0.2f);
-        Invoke("ResetAttack", attackCooldown);
-    }
-    public bool isShieldActive()
-    {
-        return shieldActive;
-    }
-    private void StopAttack()
-    {
-        animator.SetBool("isAttacking", false);
-        // Debug.Log("Attack animation stopped.");
-    }
-
-    private void ResetAttack()
-    {
-        canAttack = true;
-        // Debug.Log("Attack reset.");
-    }
-
-    public void TakeDamage()
-    {
-        Debug.Log("TakeDamage called. Current health before damage: " + currHealth);
-        if (!shieldActive)
-        {
-            currHealth -= 20;
-            bar.SetHealth(currHealth);
-            CustomAddReward(-0.5f);
-            Debug.Log("Took damage. Current health after damage: " + currHealth);
-
-            if (currHealth <= 0)
-            {
-
-                totalDeaths++;
-                UpdateUI();
-
-                Debug.Log("Player defeated. Total Deaths: " + totalDeaths);
-                CustomAddReward(-1.0f);
-                enemyAgent.EndEpisode();
-                EndEpisode();
-            }
-        }
-        else
-        {
-            Debug.Log("Shield blocked the damage.");
-            CustomAddReward(0.5f);
-        }
-    }
-
-    private void UpdateUI()
-    {
-        if (episodeCounterText != null)
-        {
-            episodeCounterText.text = "Episodes: " + totalEpisodes;
-        }
-
-        if (deathCounterText != null)
-        {
-            deathCounterText.text = "Deaths: " + totalDeaths;
-        }
-    }
+    
+    public bool isShieldActive() => shieldActive;
 
     private void Flip()
     {
@@ -417,13 +369,29 @@ public class PlayerAgent : Agent
         Vector3 scaler = transform.localScale;
         scaler.x *= -1;
         transform.localScale = scaler;
+    }
 
-        // Debug.Log("Player flipped. Facing right: " + facingRight);
+    private void UpdateUI()
+    {
+        if (episodeCounterText != null) episodeCounterText.text = "Episodes: " + totalEpisodes;
+        if (deathCounterText != null) deathCounterText.text = "Deaths: " + totalDeaths;
     }
 
     private void CustomAddReward(float reward)
     {
         AddReward(reward);
-        Debug.Log("Reward added: " + reward);
+        
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireCube(transform.position - transform.up * castDistance, Boxsize);
+
+        if (attackPoint != null)
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawWireSphere(attackPoint.transform.position, radius);
+        }
     }
 }
