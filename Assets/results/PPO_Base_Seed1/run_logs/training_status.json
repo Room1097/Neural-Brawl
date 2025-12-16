@@ -1,0 +1,66 @@
+{
+    "My Behavior": {
+        "elo": -133.47822023124624,
+        "checkpoints": [
+            {
+                "steps": 3499970,
+                "file_path": "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-3499970.onnx",
+                "reward": 1.0396000169217587,
+                "creation_time": 1765323426.0121107,
+                "auxillary_file_paths": [
+                    "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-3499970.pt"
+                ]
+            },
+            {
+                "steps": 3999948,
+                "file_path": "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-3999948.onnx",
+                "reward": -0.024259243751186186,
+                "creation_time": 1765326684.895877,
+                "auxillary_file_paths": [
+                    "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-3999948.pt"
+                ]
+            },
+            {
+                "steps": 4499961,
+                "file_path": "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-4499961.onnx",
+                "reward": 0.08027269605504857,
+                "creation_time": 1765329927.786563,
+                "auxillary_file_paths": [
+                    "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-4499961.pt"
+                ]
+            },
+            {
+                "steps": 4999953,
+                "file_path": "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-4999953.onnx",
+                "reward": 1.1985000779774662,
+                "creation_time": 1765333182.847847,
+                "auxillary_file_paths": [
+                    "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-4999953.pt"
+                ]
+            },
+            {
+                "steps": 5000017,
+                "file_path": "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-5000017.onnx",
+                "reward": 1.1985000779774662,
+                "creation_time": 1765333182.9504538,
+                "auxillary_file_paths": [
+                    "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-5000017.pt"
+                ]
+            }
+        ],
+        "final_checkpoint": {
+            "steps": 5000017,
+            "file_path": "results\\PPO_Base_Seed1\\My Behavior.onnx",
+            "reward": 1.1985000779774662,
+            "creation_time": 1765333182.9504538,
+            "auxillary_file_paths": [
+                "results\\PPO_Base_Seed1\\My Behavior\\My Behavior-5000017.pt"
+            ]
+        }
+    },
+    "metadata": {
+        "stats_format_version": "0.3.0",
+        "mlagents_version": "1.1.0",
+        "torch_version": "2.2.2+cpu"
+    }
+}
